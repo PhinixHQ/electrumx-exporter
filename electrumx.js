@@ -15,7 +15,7 @@ requestCounts = new client.Gauge({ name: 'electrumx_request_count', help: 'numbe
 sessionCounts = new client.Gauge({ name: 'electrumx_session_count', help: 'number of sesstions to electrumx server', labelNames: ['coin', 'method'] });
 requestTotal = new client.Gauge({ name: 'electrumx_total_request_count', help: 'number of total requests to electrumx server', labelNames: ['coin'] });
 txsSent = new client.Gauge({ name: 'electrumx_txs_sent_count', help: 'number of txs sent of electrumx server', labelNames: ['coin'] });
-
+daemonStartTimeGauge = new client.Gauge({ name: 'electrumx_daemon_start_time', help: 'electrumx server startTime', labelNames: ['coin'] });
 
 const main = async () => {
     const ecl = new ElectrumCli(electrumxPort, electrumxHost, 'tcp') // tcp or tls
@@ -28,6 +28,21 @@ const main = async () => {
         requestTotal.set({ coin: info.coin }, info['request total']);
         txsSent.set({ coin: info.coin }, info['txs sent']);
         electrumxLastUpdateGauge.set(Math.floor(Date.now() / 1000));
+
+
+        // daemon utc start_time
+        var electrumxUptime = info['uptime'];
+
+        var times = electrumxUptime.split(' ');
+        var finalDay = times[0].split('d');
+        var finalHour = times[1].split('h');
+        var finalMinute = times[2].split('m')
+        var finalSeconds = ( parseInt(finalDay[0]) * 86400 ) + ( parseInt(finalHour[0]) * 3600 ) + ( parseInt(finalMinute[0]) * 60 );
+
+        daemonUptime = new Date(Date.now() - (finalSeconds * 1000));
+        daemonStartTimeGauge.set({ coin: info.coin }, daemonUptime.getTime()/1000);
+
+        //  
         for(const [request, count] of Object.entries(info['request counts'])) {
             requestCounts.set({ coin: info.coin, method: request }, count);
         }
