@@ -17,7 +17,7 @@ requestTotal = new client.Gauge({ name: 'electrumx_total_request_count', help: '
 txsSent = new client.Gauge({ name: 'electrumx_txs_sent_count', help: 'number of txs sent of electrumx server', labelNames: ['coin'] });
 daemonStartTimeGauge = new client.Gauge({ name: 'electrumx_daemon_start_time', help: 'electrumx server startTime', labelNames: ['coin'] });
 
-const main = async () => {
+async function updateMetrics() {
     const ecl = new ElectrumCli(electrumxPort, electrumxHost, 'tcp') // tcp or tls
     try {
         await ecl.connect() // connect(promise)
@@ -49,17 +49,12 @@ const main = async () => {
         for(const [request, count] of Object.entries(info['sessions'])) {
             sessionCounts.set({ coin: info.coin, method: request }, count);
         }
-
-        
     } catch (e) {
         console.log(e);
         electrumxUpGauge.set({ coin: process.env.COIN }, 0);
     }
     await ecl.close() // disconnect(promise)
 }
-
-
-
 
 //app
 app.get('/metrics', async (req, res) => {
@@ -73,10 +68,10 @@ function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function updateMain(){
+async function main(){
    while(true){
-       await Promise.all([main(), delay(process.env.REFRESH_INTERVAL_MILLISECONDS)]);
+       await Promise.all([updateMetrics(), delay(process.env.REFRESH_INTERVAL_MILLISECONDS)]);
     }
 }
 
-updateMain();
+main();
