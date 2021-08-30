@@ -31,14 +31,25 @@ async function updateMetrics() {
 
 
         // daemon utc start_time
+        var finalSeconds = 0;
         var electrumxUptime = info['uptime'];
-
         var times = electrumxUptime.split(' ');
-        var finalDay = times[0].split('d');
-        var finalHour = times[1].split('h');
-        var finalMinute = times[2].split('m')
-        var finalSeconds = ( parseInt(finalDay[0]) * 86400 ) + ( parseInt(finalHour[0]) * 3600 ) + ( parseInt(finalMinute[0]) * 60 );
-
+        
+        for (const i of times) {
+            if (i.split(/([0-9]+)/)[2] == 'd') {
+                finalSeconds += parseInt(i.split(/([0-9]+)/)[1]) * 86400;
+            }
+            if (i.split(/([0-9]+)/)[2] == 'h') {
+                finalSeconds += parseInt(i.split(/([0-9]+)/)[1]) * 3600;
+            }
+            if (i.split(/([0-9]+)/)[2] == 'm') {
+                finalSeconds += parseInt(i.split(/([0-9]+)/)[1]) * 60;
+            }
+            if (i.split(/([0-9]+)/)[2] == 's') {
+                finalSeconds += parseInt(i.split(/([0-9]+)/)[1]);
+            }
+        }
+        
         daemonUptime = new Date(Date.now() - (finalSeconds * 1000));
         daemonStartTimeGauge.set({ coin: info.coin }, daemonUptime.getTime()/1000);
 
