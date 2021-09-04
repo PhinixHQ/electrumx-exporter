@@ -5,9 +5,7 @@ services:
     restart: unless-stopped
     environment: 
       REFRESH_INTERVAL_MILLISECONDS: "30000"
-      LISTEN_PORT:
       ELECTRUMX_HOST:
       ELECTRUMX_PORT:
       COIN:
-    ports:
-      - "9099:9099"
+    network_mode: "host"
