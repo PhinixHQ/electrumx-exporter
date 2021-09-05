@@ -27,7 +27,7 @@ async function updateMetrics() {
         currentBlockGauge.set({ coin: info.coin }, info['daemon height']);
         requestTotal.set({ coin: info.coin }, info['request total']);
         txsSent.set({ coin: info.coin }, info['txs sent']);
-        electrumxLastUpdateGauge.set(Math.floor(Date.now() / 1000),{ coin: info.coin });
+        electrumxLastUpdateGauge.set({ coin: info.coin }, Math.floor(Date.now() / 1000));
 
 
         // daemon utc start_time
