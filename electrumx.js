@@ -4,6 +4,7 @@ const app = express();
 require('dotenv').config();
 const ElectrumCli = require('electrum-client')
 const client = require('prom-client');
+axios.defaults.timeout = parseInt(process.env.AXIOS_TIMEOUT);
 
 const electrumxHost = process.env.ELECTRUMX_HOST;
 const electrumxPort = process.env.ELECTRUMX_PORT;
@@ -18,11 +19,13 @@ txsSent = new client.Gauge({ name: 'electrumx_txs_sent_count', help: 'number of 
 daemonStartTimeGauge = new client.Gauge({ name: 'electrumx_daemon_start_time', help: 'electrumx server startTime', labelNames: ['coin'] });
 
 async function updateMetrics() {
+    console.log('ecl connecting');
     const ecl = new ElectrumCli(electrumxPort, electrumxHost, 'tcp') // tcp or tls
     try {
         await ecl.connect() // connect(promise)
         const info = await ecl.request('getinfo')
-        
+        console.log('ecl connected without error');
+        console.log('///////////////////////////');
         electrumxUpGauge.set({ coin: info.coin }, 1);
         currentBlockGauge.set({ coin: info.coin }, info['daemon height']);
         requestTotal.set({ coin: info.coin }, info['request total']);
@@ -62,6 +65,7 @@ async function updateMetrics() {
         }
     } catch (e) {
         console.log(e);
+        console.log('error on ecl connection');
         electrumxUpGauge.set({ coin: process.env.COIN }, 0);
     }
     await ecl.close() // disconnect(promise)

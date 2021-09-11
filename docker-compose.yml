@@ -5,6 +5,7 @@ services:
     restart: unless-stopped
     environment: 
       REFRESH_INTERVAL_MILLISECONDS: "30000"
+      AXIOS_TIMEOUT: "4000"
       ELECTRUMX_HOST:
       ELECTRUMX_PORT:
       COIN:
