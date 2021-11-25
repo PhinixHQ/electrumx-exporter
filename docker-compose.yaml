@@ -1,6 +1,6 @@
 version: '3.9'
 services:
-  app:
+  exporter:
     image: phinixhq/electrumx-exporter
     restart: unless-stopped
     environment: 
