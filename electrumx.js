@@ -27,7 +27,7 @@ async function updateMetrics() {
         console.log('ecl connected without error');
         console.log('///////////////////////////');
         electrumxUpGauge.set({ coin: info.coin }, 1);
-        currentBlockGauge.set({ coin: info.coin }, info['daemon height']);
+        currentBlockGauge.set({ coin: info.coin }, info['db height']);
         requestTotal.set({ coin: info.coin }, info['request total']);
         txsSent.set({ coin: info.coin }, info['txs sent']);
         electrumxLastUpdateGauge.set({ coin: info.coin }, Math.floor(Date.now() / 1000));
