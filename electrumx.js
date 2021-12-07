@@ -5,6 +5,14 @@ require('dotenv').config();
 const ElectrumCli = require('electrum-client')
 const client = require('prom-client');
 axios.defaults.timeout = parseInt(process.env.AXIOS_TIMEOUT);
+const Sentry = require('@sentry/node');
+
+// Sentry
+Sentry.init({ dsn: process.env.SENTRY_DSN });
+Sentry.configureScope(scope => {
+    scope.setTag('coin', process.env.COIN_NAME);
+    scope.setTag('scope', process.env.SCOPE);
+  });
 
 const electrumxHost = process.env.ELECTRUMX_HOST;
 const electrumxPort = process.env.ELECTRUMX_PORT;
@@ -64,6 +72,7 @@ async function updateMetrics() {
             sessionCounts.set({ coin: info.coin, method: request }, count);
         }
     } catch (e) {
+        Sentry.captureException(e);
         console.log(e);
         console.log('error on ecl connection');
         electrumxUpGauge.set({ coin: process.env.COIN }, 0);

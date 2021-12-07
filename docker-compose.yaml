@@ -9,4 +9,6 @@ services:
       ELECTRUMX_HOST:
       ELECTRUMX_PORT:
       COIN:
+      SENTRY_DSN:
+      SCOPE:
     network_mode: "host"
