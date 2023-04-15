@@ -8,16 +8,20 @@ axios.defaults.timeout = parseInt(process.env.AXIOS_TIMEOUT);
 const Sentry = require('@sentry/node');
 
 // Sentry
-Sentry.init({ dsn: process.env.SENTRY_DSN });
-Sentry.configureScope(scope => {
-    scope.setTag('coin', process.env.COIN_NAME);
-    scope.setTag('scope', process.env.SCOPE);
-  });
+if (process.env.SENTRY_DSN) {
+    Sentry.init({ dsn: process.env.SENTRY_DSN });
+    Sentry.configureScope(scope => {
+        scope.setTag('coin', process.env.COIN_NAME);
+        scope.setTag('scope', process.env.SCOPE);
+    });
+} else {
+    console.log('SENTRY_DSN is not defined');
+}
 
 const electrumxHost = process.env.ELECTRUMX_HOST;
 const electrumxPort = process.env.ELECTRUMX_PORT;
 
-electrumxUpGauge = new client.Gauge({ name: 'electrumx_up', help: 'status of electrumx server', labelNames: ['coin']});
+electrumxUpGauge = new client.Gauge({ name: 'electrumx_up', help: 'status of electrumx server', labelNames: ['coin'] });
 currentBlockGauge = new client.Gauge({ name: 'electrumx_current_block_height', help: 'height of current block on electrumx server', labelNames: ['coin'] });
 electrumxLastUpdateGauge = new client.Gauge({ name: 'electrumx_last_update_seconds', help: 'electrumx_last_update_seconds', labelNames: ['coin'] });
 requestCounts = new client.Gauge({ name: 'electrumx_request_count', help: 'number of requests to electrumx server', labelNames: ['coin', 'method'] });
@@ -45,7 +49,7 @@ async function updateMetrics() {
         var finalSeconds = 0;
         var electrumxUptime = info['uptime'];
         var times = electrumxUptime.split(' ');
-        
+
         for (const i of times) {
             if (i.split(/([0-9]+)/)[2] == 'd') {
                 finalSeconds += parseInt(i.split(/([0-9]+)/)[1]) * 86400;
@@ -60,19 +64,21 @@ async function updateMetrics() {
                 finalSeconds += parseInt(i.split(/([0-9]+)/)[1]);
             }
         }
-        
-        daemonUptime = new Date(Date.now() - (finalSeconds * 1000));
-        daemonStartTimeGauge.set({ coin: info.coin }, daemonUptime.getTime()/1000);
 
-        //  
-        for(const [request, count] of Object.entries(info['request counts'])) {
+        daemonUptime = new Date(Date.now() - (finalSeconds * 1000));
+        daemonStartTimeGauge.set({ coin: info.coin }, daemonUptime.getTime() / 1000);
+
+        //
+        for (const [request, count] of Object.entries(info['request counts'])) {
             requestCounts.set({ coin: info.coin, method: request }, count);
         }
-        for(const [request, count] of Object.entries(info['sessions'])) {
+        for (const [request, count] of Object.entries(info['sessions'])) {
             sessionCounts.set({ coin: info.coin, method: request }, count);
         }
     } catch (e) {
-        Sentry.captureException(e);
+        if (process.env.SENTRY_DSN) {
+            Sentry.captureException(e);
+        }
         console.log(e);
         console.log('error on ecl connection');
         electrumxUpGauge.set({ coin: process.env.COIN }, 0);
@@ -92,9 +98,9 @@ function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function main(){
-   while(true){
-       await Promise.all([updateMetrics(), delay(process.env.REFRESH_INTERVAL_MILLISECONDS)]);
+async function main() {
+    while (true) {
+        await Promise.all([updateMetrics(), delay(process.env.REFRESH_INTERVAL_MILLISECONDS)]);
     }
 }
 
